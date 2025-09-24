@@ -1,3 +1,5 @@
+import React from 'react';
+
 export interface Message {
     id: string;
     senderId: number;
@@ -10,7 +12,6 @@ export interface Conversation {
     participantIds: number[];
     messages: Message[];
 }
-import { ReactNode } from 'react';
 
 export type UserRole = 'student' | 'teacher';
 

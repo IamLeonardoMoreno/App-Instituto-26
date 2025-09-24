@@ -1,3 +1,4 @@
+
 import React, { useState, createContext, useContext, ReactNode, useMemo, useRef, useEffect } from 'react';
 // FIX: Renamed `Partial` to `PartialGrade` to match the change in `types.ts` and resolve the name conflict with TypeScript's built-in `Partial` utility type.
 import { User, Student, Teacher, NavItem, Course, AttendanceStatus, Subject, PartialGrade, Conversation, Message, UserRole, AttendanceRecord, CustomEvent, DataContextType } from './types';
@@ -244,57 +245,38 @@ const BottomNavBar: React.FC<{ active: string; onNavigate: (item: NavItem) => vo
 
 // --- AUTHENTICATION ---
 const LoginScreen: React.FC<{ onLoginSuccess: (user: User) => void; }> = ({ onLoginSuccess }) => {
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [error, setError] = useState('');
     const { users } = useData();
 
-    const handleLogin = (e: React.FormEvent) => {
-        e.preventDefault();
-        const user = users.find(u => u.email === email && u.password === password);
+    const handleLogin = (role: UserRole) => {
+        let user;
+        if (role === 'student') {
+            user = users.find(u => u.email === 'alumno@test.com');
+        } else {
+            user = users.find(u => u.email === 'preceptor@test.com');
+        }
+
         if (user) {
-            setError('');
             onLoginSuccess(user);
         } else {
-            setError('Correo o contraseña incorrectos.');
+            console.error(`Mock ${role} not found`);
         }
     };
 
     return (
         <div className="flex flex-col items-center justify-center min-h-screen bg-brand-dark text-white p-4">
-            <div className="w-full max-w-sm">
-                <h1 className="text-3xl font-bold text-center mb-2">Mi Instituto</h1>
-                <p className="text-gray-400 text-center mb-8">Iniciar Sesión</p>
+            <div className="w-full max-w-sm text-center">
+                <h1 className="text-4xl font-bold mb-4">Mi Instituto</h1>
+                <p className="text-gray-400 mb-12">Selecciona tu rol para continuar</p>
 
-                <form onSubmit={handleLogin}>
-                    <div className="mb-4">
-                        <input
-                            type="email"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            placeholder="Correo electrónico"
-                            className="w-full p-4 bg-brand-dark-2 border border-brand-dark-light rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-green"
-                            aria-label="Correo electrónico"
-                        />
-                    </div>
-                    <div className="mb-6">
-                        <input
-                            type="password"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            placeholder="Contraseña"
-                            className="w-full p-4 bg-brand-dark-2 border border-brand-dark-light rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-green"
-                            aria-label="Contraseña"
-                        />
-                    </div>
-                    {error && <p className="text-brand-red text-center mb-4">{error}</p>}
-                    <Button type="submit" className="bg-brand-green text-brand-dark hover:bg-brand-green-dark">
-                        Ingresar
+                <div className="space-y-4">
+                    <Button onClick={() => handleLogin('student')} className="bg-brand-green text-brand-dark hover:bg-brand-green-dark flex items-center justify-center space-x-2">
+                        <UserCircleIcon className="w-6 h-6" />
+                        <span>Iniciar como Alumno</span>
                     </Button>
-                </form>
-                <div className="text-center text-gray-500 text-xs mt-4">
-                    <p>Alumno: alumno@test.com / 123</p>
-                    <p>Preceptor: preceptor@test.com / 123</p>
+                    <Button onClick={() => handleLogin('teacher')} className="bg-brand-dark-2 text-white hover:bg-brand-dark-light flex items-center justify-center space-x-2">
+                        <ShieldCheckIcon className="w-6 h-6" />
+                        <span>Iniciar como Preceptor</span>
+                    </Button>
                 </div>
             </div>
         </div>
