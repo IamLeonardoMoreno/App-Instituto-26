@@ -1,3 +1,4 @@
+
 import React from 'react';
 
 export const CheckCircleIcon: React.FC<{ className?: string }> = ({ className }) => (
@@ -131,5 +132,25 @@ export const DocumentCheckIcon: React.FC<{ className?: string }> = ({ className 
 export const PlusIcon: React.FC<{ className?: string }> = ({ className }) => (
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+    </svg>
+);
+
+export const PaintBrushIcon: React.FC<{ className?: string }> = ({ className }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25l-2.625 2.625a3.375 3.375 0 01-4.773 0L3.375 5.625a3.375 3.375 0 010-4.773l2.625-2.625a3.375 3.375 0 014.773 0l9.75 9.75a3.375 3.375 0 010 4.773z" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6.375l-4.5-4.5m0 0l-4.5 4.5m4.5-4.5v9" />
+    </svg>
+);
+
+export const SwatchIcon: React.FC<{ className?: string }> = ({ className }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M4.098 19.902a3.75 3.75 0 005.304 0l6.401-6.402M6.75 21A3.75 3.75 0 013 17.25V4.125C3 3.504 3.504 3 4.125 3h5.25c.621 0 1.125.504 1.125 1.125v4.072M6.75 21a3.75 3.75 0 003.75-3.75V8.197M6.75 21h13.125c.621 0 1.125-.504 1.125-1.125v-5.25c0-.621-.504-1.125-1.125-1.125h-4.072M10.5 8.197l2.88-2.88c.781-.781 2.047-.781 2.828 0l2.828 2.828c.781.781.781 2.047 0 2.828l-2.88 2.88M10.5 8.197M14.25 12l6.402 6.402a3.75 3.75 0 01-5.304 0l-6.401-6.402" />
+    </svg>
+);
+
+export const RectangleStackIcon: React.FC<{ className?: string }> = ({ className }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M6.429 9.75L2.25 12l4.179 2.25m0-4.5l5.571 3 5.571-3m-11.142 0L2.25 7.5 12 2.25l9.75 5.25-5.571 3-5.571-3z" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M12 21.75l-9.75-5.25L6.429 14.25m11.142 0l4.179-2.25-4.179-2.25m0 4.5l-5.571 3-5.571-3m11.142 0l-5.571-3 5.571-3" />
     </svg>
 );

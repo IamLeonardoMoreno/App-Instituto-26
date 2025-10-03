@@ -7,8 +7,82 @@ import {
     HomeIcon, CalendarIcon, BookOpenIcon, UserCircleIcon, CogIcon, BellIcon, ArrowLeftIcon,
     CheckCircleIcon, XCircleIcon, JustifyIcon, MinusCircleIcon, LateIcon, ChevronRightIcon,
     LogoutIcon, DocumentTextIcon, ShieldCheckIcon, GlobeAltIcon, ChevronLeftIcon, ChatBubbleLeftRightIcon,
-    PaperAirplaneIcon, DocumentCheckIcon, PlusIcon
+    PaperAirplaneIcon, DocumentCheckIcon, PlusIcon, PaintBrushIcon, SwatchIcon, RectangleStackIcon
 } from './components/Icons';
+
+// --- APPEARANCE PROVIDER CONTEXT ---
+
+interface AppearanceContextType {
+    theme: string;
+    setTheme: (theme: string) => void;
+    borderStyle: string;
+    setBorderStyle: (style: string) => void;
+    themes: Record<string, Theme>;
+    borderStyles: Record<string, BorderStyle>;
+}
+
+interface Theme {
+    id: string;
+    name: string;
+    colors: { c1: string, c2: string, c3: string };
+}
+interface BorderStyle {
+    id: string;
+    name: string;
+}
+
+const AppearanceContext = createContext<AppearanceContextType | null>(null);
+
+const useAppearance = () => {
+    const context = useContext(AppearanceContext);
+    if (!context) {
+        throw new Error('useAppearance must be used within an AppearanceProvider');
+    }
+    return context;
+};
+
+const THEMES: Record<string, Theme> = {
+    original: { id: 'original', name: 'Original', colors: { c1: '#1E232B', c2: '#2A303A', c3: '#14B8A6' } },
+    ensoñacion: { id: 'ensoñacion', name: 'Ensoñación', colors: { c1: '#FDF2F8', c2: '#FFFFFF', c3: '#DB2777' } },
+    celestial: { id: 'celestial', name: 'Celestial', colors: { c1: '#f0f9ff', c2: '#ffffff', c3: '#ca8a04' } },
+    oscuro: { id: 'oscuro', name: 'Oscuro', colors: { c1: '#171717', c2: '#262626', c3: '#ca8a04' } },
+    enfoque: { id: 'enfoque', name: 'Enfoque', colors: { c1: '#17252A', c2: '#2B7A78', c3: '#DEF2F1' } },
+    fantasma: { id: 'fantasma', name: 'Fantasma', colors: { c1: '#1C1D21', c2: '#31353D', c3: '#E11D48' } },
+    rebelde: { id: 'rebelde', name: 'Rebelde', colors: { c1: '#1A1A1A', c2: '#2A2A2A', c3: '#F7DF1E' } },
+};
+
+const BORDER_STYLES: Record<string, BorderStyle> = {
+    default: { id: 'default', name: 'Predeterminado' },
+    sencillo: { id: 'sencillo', name: 'Sencillo' },
+    redondeado: { id: 'redondeado', name: 'Redondeado' },
+    marcado: { id: 'marcado', name: 'Marcado' },
+};
+
+const AppearanceProvider = ({ children }: { children: ReactNode }) => {
+    const [theme, setThemeState] = useState(() => localStorage.getItem('app-theme') || 'original');
+    const [borderStyle, setBorderStyleState] = useState(() => localStorage.getItem('app-border-style') || 'default');
+
+    useEffect(() => {
+        document.documentElement.dataset.theme = theme;
+        localStorage.setItem('app-theme', theme);
+    }, [theme]);
+
+    useEffect(() => {
+        document.documentElement.dataset.borderStyle = borderStyle;
+        localStorage.setItem('app-border-style', borderStyle);
+    }, [borderStyle]);
+
+    const value: AppearanceContextType = {
+        theme,
+        setTheme: setThemeState,
+        borderStyle,
+        setBorderStyle: setBorderStyleState,
+        themes: THEMES,
+        borderStyles: BORDER_STYLES,
+    };
+    return <AppearanceContext.Provider value={value}>{children}</AppearanceContext.Provider>;
+}
+
 
 // --- DATA PROVIDER CONTEXT ---
 
@@ -179,7 +253,7 @@ const DataProvider = ({ children }: { children: ReactNode }) => {
 // --- UTILITY & HELPER COMPONENTS ---
 
 const Screen: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-    <div className="bg-brand-dark text-white w-full h-full font-sans antialiased">
+    <div className="bg-brand-dark text-theming-text-primary w-full h-full font-sans antialiased">
         <div className="max-w-md mx-auto h-screen flex flex-col">{children}</div>
     </div>
 );
@@ -199,14 +273,14 @@ const Header: React.FC<{ title: string; onBack?: () => void; children?: React.Re
 );
 
 const Card: React.FC<{ children: React.ReactNode; className?: string; onClick?: () => void }> = ({ children, className = '', onClick }) => (
-    <div className={`bg-brand-dark-2 rounded-lg p-4 ${className} ${onClick ? 'cursor-pointer hover:bg-brand-dark-light transition-colors' : ''}`} onClick={onClick}>
+    <div className={`bg-brand-dark-2 rounded-theme p-4 border-theme border-theming-border ${className} ${onClick ? 'cursor-pointer hover:bg-brand-dark-light transition-colors' : ''}`} onClick={onClick}>
         {children}
     </div>
 );
 
 const Button: React.FC<React.ComponentProps<'button'>> = ({ children, className = '', ...props }) => (
     <button
-        className={`w-full text-center font-bold py-3 px-4 rounded-lg transition-colors ${className}`}
+        className={`w-full text-center font-bold py-3 px-4 rounded-theme transition-colors ${className}`}
         {...props}
     >
         {children}
@@ -223,7 +297,7 @@ const Toggle: React.FC<{label: string, enabled: boolean, onToggle: () => void}> 
 );
 
 // --- NAVIGATION ---
-type ScreenName = 'login' | 'studentDashboard' | 'teacherDashboard' | 'studentSubjects' | 'studentSubjectDetail' | 'studentCalendar' | 'studentProfile' | 'teacherCourses' | 'courseAttendance' | 'teacherStudentProfile' | 'teacherCalendar' | 'teacherProfile' | 'notificationsSettings' | 'privacySettings' | 'languageSettings' | 'messages' | 'chat' | 'teacherJustifications';
+type ScreenName = 'login' | 'studentDashboard' | 'teacherDashboard' | 'studentSubjects' | 'studentSubjectDetail' | 'studentCalendar' | 'studentProfile' | 'teacherCourses' | 'courseAttendance' | 'teacherStudentProfile' | 'teacherCalendar' | 'teacherProfile' | 'notificationsSettings' | 'privacySettings' | 'languageSettings' | 'messages' | 'chat' | 'teacherJustifications' | 'appearanceSettings';
 
 const BottomNavBar: React.FC<{ active: string; onNavigate: (item: NavItem) => void; navItems: NavItem[] }> = ({ active, onNavigate, navItems }) => (
     <nav className="bg-brand-dark-2 mt-auto">
@@ -232,7 +306,7 @@ const BottomNavBar: React.FC<{ active: string; onNavigate: (item: NavItem) => vo
                 <button
                     key={item.id}
                     onClick={() => onNavigate(item)}
-                    className={`flex flex-col items-center justify-center w-full h-full text-xs transition-colors ${active === item.id ? 'text-brand-green' : 'text-gray-400 hover:text-white'}`}
+                    className={`flex flex-col items-center justify-center w-full h-full text-xs transition-colors ${active === item.id ? 'text-brand-green' : 'text-theming-text-secondary hover:text-theming-text-primary'}`}
                     aria-label={item.label}
                 >
                     <item.icon className="w-6 h-6 mb-1" />
@@ -263,17 +337,17 @@ const LoginScreen: React.FC<{ onLoginSuccess: (user: User) => void; }> = ({ onLo
     };
 
     return (
-        <div className="flex flex-col items-center justify-center min-h-screen bg-brand-dark text-white p-4">
+        <div className="flex flex-col items-center justify-center min-h-screen bg-brand-dark text-theming-text-primary p-4">
             <div className="w-full max-w-sm text-center">
                 <h1 className="text-4xl font-bold mb-4">Mi Instituto</h1>
-                <p className="text-gray-400 mb-12">Selecciona tu rol para continuar</p>
+                <p className="text-theming-text-secondary mb-12">Selecciona tu rol para continuar</p>
 
                 <div className="space-y-4">
-                    <Button onClick={() => handleLogin('student')} className="bg-brand-green text-brand-dark hover:bg-brand-green-dark flex items-center justify-center space-x-2">
+                    <Button onClick={() => handleLogin('student')} className="bg-brand-green text-theming-text-on-accent hover:bg-brand-green-dark flex items-center justify-center space-x-2">
                         <UserCircleIcon className="w-6 h-6" />
                         <span>Iniciar como Alumno</span>
                     </Button>
-                    <Button onClick={() => handleLogin('teacher')} className="bg-brand-dark-2 text-white hover:bg-brand-dark-light flex items-center justify-center space-x-2">
+                    <Button onClick={() => handleLogin('teacher')} className="bg-brand-dark-2 text-theming-text-primary hover:bg-brand-dark-light flex items-center justify-center space-x-2">
                         <ShieldCheckIcon className="w-6 h-6" />
                         <span>Iniciar como Preceptor</span>
                     </Button>
@@ -303,7 +377,7 @@ const StudentDashboard: React.FC<{ student: Student, onNavigate: (screen: Screen
                 <h2 className="text-2xl font-bold">¡Hola, {student.name}!</h2>
 
                 <Card className="space-y-3">
-                    <p className="text-gray-400 text-sm">Tu Próxima Clase</p>
+                    <p className="text-theming-text-secondary text-sm">Tu Próxima Clase</p>
                     <h3 className="text-xl font-bold">{nextClass.name}</h3>
                     <div className="flex items-center text-gray-300 text-sm">
                         <CalendarIcon className="w-4 h-4 mr-2" />
@@ -324,7 +398,7 @@ const StudentDashboard: React.FC<{ student: Student, onNavigate: (screen: Screen
                                     <span className="w-2 h-2 rounded-full bg-brand-green mr-3"></span>
                                     <span>{p.name} - {student.subjects.find(s => s.partials.includes(p))?.name}</span>
                                 </div>
-                                <span className="text-gray-400">{new Date(p.date).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit' })}</span>
+                                <span className="text-theming-text-secondary">{new Date(p.date).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit' })}</span>
                             </li>
                         ))}
                     </ul>
@@ -332,7 +406,7 @@ const StudentDashboard: React.FC<{ student: Student, onNavigate: (screen: Screen
 
                 <Card>
                     <h3 className="font-bold mb-3">Inscripción a Exámenes Finales</h3>
-                    <Button onClick={() => onNavigate('studentSubjects')} className="bg-brand-green text-brand-dark text-sm hover:bg-brand-green-dark">Explorar Materias</Button>
+                    <Button onClick={() => onNavigate('studentSubjects')} className="bg-brand-green text-theming-text-on-accent text-sm hover:bg-brand-green-dark">Explorar Materias</Button>
                 </Card>
             </main>
         </>
@@ -347,8 +421,8 @@ const StudentSubjectsScreen: React.FC<{ student: Student, onSelectSubject: (subj
                 <Card key={subject.id} onClick={() => onSelectSubject(subject)} className="flex justify-between items-center">
                     <div>
                         <h3 className="font-bold text-lg">{subject.name}</h3>
-                        <p className="text-sm text-gray-400">{subject.teacher}</p>
-                        <p className="text-sm text-gray-400">{subject.schedule} - {subject.classroom}</p>
+                        <p className="text-sm text-theming-text-secondary">{subject.teacher}</p>
+                        <p className="text-sm text-theming-text-secondary">{subject.schedule} - {subject.classroom}</p>
                     </div>
                     <ChevronRightIcon className="w-6 h-6 text-gray-500" />
                 </Card>
@@ -385,11 +459,11 @@ const StudentSubjectDetailScreen: React.FC<{ student: Student, subjectId: string
     return (
         <div className="h-full flex flex-col">
             <Header title={subject.name} onBack={onBack} />
-            <div className="border-b border-brand-dark-light">
+            <div className="border-b border-theming-border">
                 <div className="flex justify-around">
-                    <button onClick={() => setActiveTab('asistencia')} className={`py-3 px-4 font-bold ${activeTab === 'asistencia' ? 'text-brand-green border-b-2 border-brand-green' : 'text-gray-400'}`}>Asistencia</button>
-                    <button onClick={() => setActiveTab('parciales')} className={`py-3 px-4 font-bold ${activeTab === 'parciales' ? 'text-brand-green border-b-2 border-brand-green' : 'text-gray-400'}`}>Parciales</button>
-                    <button onClick={() => setActiveTab('recursos')} className={`py-3 px-4 font-bold ${activeTab === 'recursos' ? 'text-brand-green border-b-2 border-brand-green' : 'text-gray-400'}`}>Recursos</button>
+                    <button onClick={() => setActiveTab('asistencia')} className={`py-3 px-4 font-bold ${activeTab === 'asistencia' ? 'text-brand-green border-b-2 border-brand-green' : 'text-theming-text-secondary'}`}>Asistencia</button>
+                    <button onClick={() => setActiveTab('parciales')} className={`py-3 px-4 font-bold ${activeTab === 'parciales' ? 'text-brand-green border-b-2 border-brand-green' : 'text-theming-text-secondary'}`}>Parciales</button>
+                    <button onClick={() => setActiveTab('recursos')} className={`py-3 px-4 font-bold ${activeTab === 'recursos' ? 'text-brand-green border-b-2 border-brand-green' : 'text-theming-text-secondary'}`}>Recursos</button>
                 </div>
             </div>
             <main className="p-4 flex-grow overflow-y-auto">
@@ -415,7 +489,7 @@ const StudentSubjectDetailScreen: React.FC<{ student: Student, subjectId: string
                              }
                             
                             return (
-                                <li key={record.date} className="bg-brand-dark-2 p-3 rounded-lg">
+                                <li key={record.date} className="bg-brand-dark-2 p-3 rounded-theme">
                                     <div className="flex justify-between items-center">
                                        <span>{new Date(record.date).toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
                                        <span className={`font-bold ${ATTENDANCE_STATUS[record.status].color}`}>{ATTENDANCE_STATUS[record.status].label}</span>
@@ -424,16 +498,16 @@ const StudentSubjectDetailScreen: React.FC<{ student: Student, subjectId: string
                                 </li>
                            );
                         })}
-                         {subject.attendance.length === 0 && <p className="text-gray-400 text-center">No hay registros de asistencia.</p>}
+                         {subject.attendance.length === 0 && <p className="text-theming-text-secondary text-center">No hay registros de asistencia.</p>}
                     </ul>
                 )}
                 {activeTab === 'parciales' && (
                      <ul className="space-y-3">
                         {subject.partials.map(p => (
-                             <li key={p.date} className="flex justify-between items-center bg-brand-dark-2 p-3 rounded-lg">
+                             <li key={p.date} className="flex justify-between items-center bg-brand-dark-2 p-3 rounded-theme">
                                  <div>
                                     <p className="font-bold">{p.name}</p>
-                                    <p className="text-sm text-gray-400">{new Date(p.date).toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                                    <p className="text-sm text-theming-text-secondary">{new Date(p.date).toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
                                  </div>
                                  <span className={`font-bold text-lg ${p.grade && p.grade >= 6 ? 'text-green-400' : 'text-red-400'}`}>{p.grade ?? '-'}</span>
                              </li>
@@ -441,14 +515,14 @@ const StudentSubjectDetailScreen: React.FC<{ student: Student, subjectId: string
                      </ul>
                 )}
                 {activeTab === 'recursos' && (
-                    <div className="text-center text-gray-400 pt-8">
+                    <div className="text-center text-theming-text-secondary pt-8">
                         <DocumentTextIcon className="w-12 h-12 mx-auto mb-2"/>
                         <p>No hay recursos disponibles.</p>
                     </div>
                 )}
             </main>
             <div className="p-4 bg-brand-dark-2">
-                 <Button className={`text-white ${subject.isRegisteredForFinal ? 'bg-gray-500' : 'bg-brand-green hover:bg-brand-green-dark'}`} disabled={subject.isRegisteredForFinal}>
+                 <Button className={`text-theming-text-on-accent ${subject.isRegisteredForFinal ? 'bg-gray-500' : 'bg-brand-green hover:bg-brand-green-dark'}`} disabled={subject.isRegisteredForFinal}>
                     {subject.isRegisteredForFinal ? 'Ya inscripto al Final' : 'Inscribirse a Final'}
                 </Button>
             </div>
@@ -480,10 +554,10 @@ const TeacherDashboard: React.FC<{ teacher: Teacher, onTakeAttendance: (course: 
             <Header title="Mi Instituto">
                  <div className="flex items-center space-x-4">
                     <button onClick={() => onNavigate('messages')} aria-label="Notifications" className="relative">
-                        <BellIcon className="w-6 h-6 text-gray-400" />
+                        <BellIcon className="w-6 h-6 text-theming-text-secondary" />
                     </button>
                     <button onClick={() => onNavigate('teacherProfile')} aria-label="Settings">
-                        <CogIcon className="w-6 h-6 text-gray-400" />
+                        <CogIcon className="w-6 h-6 text-theming-text-secondary" />
                     </button>
                 </div>
             </Header>
@@ -491,7 +565,7 @@ const TeacherDashboard: React.FC<{ teacher: Teacher, onTakeAttendance: (course: 
                  <div className="flex items-center space-x-4">
                      <img src={teacher.avatar} alt="Avatar" className="w-16 h-16 rounded-full" />
                      <div>
-                        <p className="text-gray-400">Mi Día</p>
+                        <p className="text-theming-text-secondary">Mi Día</p>
                         <h2 className="text-2xl font-bold">¡Hola, {teacher.name}!</h2>
                      </div>
                  </div>
@@ -499,7 +573,7 @@ const TeacherDashboard: React.FC<{ teacher: Teacher, onTakeAttendance: (course: 
                 <Card className="bg-brand-dark-light space-y-3">
                     <p className="text-sm">Curso: {teacher.managedCourses[0].name}</p>
                     <p className="text-sm">Hora: {teacher.managedCourses[0].schedule} - {teacher.managedCourses[0].classroom}</p>
-                    <Button onClick={() => onTakeAttendance(teacher.managedCourses[0])} className="bg-brand-green text-brand-dark hover:bg-brand-green-dark">
+                    <Button onClick={() => onTakeAttendance(teacher.managedCourses[0])} className="bg-brand-green text-theming-text-on-accent hover:bg-brand-green-dark">
                         Tomar Asistencia
                     </Button>
                 </Card>
@@ -509,7 +583,7 @@ const TeacherDashboard: React.FC<{ teacher: Teacher, onTakeAttendance: (course: 
                     {pendingJustifications.length > 0 ? (
                         <p className="text-brand-orange font-bold text-lg">{pendingJustifications.length} {pendingJustifications.length === 1 ? 'justificación' : 'justificaciones'} por revisar</p>
                     ) : (
-                        <p className="text-gray-400 text-sm">No hay justificaciones pendientes.</p>
+                        <p className="text-theming-text-secondary text-sm">No hay justificaciones pendientes.</p>
                     )}
                 </Card>
 
@@ -541,8 +615,8 @@ const TeacherCoursesScreen: React.FC<{ teacher: Teacher, onSelectCourse: (course
                  <Card key={course.id} onClick={() => onSelectCourse(course)} className="flex justify-between items-center">
                     <div>
                         <h3 className="font-bold text-lg">{course.name}</h3>
-                        <p className="text-sm text-gray-400">{course.schedule} - {course.classroom}</p>
-                        <p className="text-sm text-gray-400">{course.students.length} alumnos</p>
+                        <p className="text-sm text-theming-text-secondary">{course.schedule} - {course.classroom}</p>
+                        <p className="text-sm text-theming-text-secondary">{course.students.length} alumnos</p>
                     </div>
                     <ChevronRightIcon className="w-6 h-6 text-gray-500" />
                 </Card>
@@ -614,20 +688,20 @@ const CourseAttendanceScreen: React.FC<{ course: Course, onBack: () => void, onS
     return (
         <div className="h-full flex flex-col">
             <Header title="Tomar Asistencia" onBack={onBack} />
-            <div className="bg-brand-green p-4 text-brand-dark">
+            <div className="bg-brand-green p-4 text-theming-text-on-accent">
                 <h2 className="font-bold">{course.name}</h2>
                 <p>{course.schedule} - {course.classroom}</p>
                 <p>{new Date().toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
             </div>
             <div className="p-4">
-                <Button onClick={markAllPresent} className="bg-brand-dark-light text-white mb-4">Marcar Todos Presentes</Button>
+                <Button onClick={markAllPresent} className="bg-brand-dark-light text-theming-text-primary mb-4">Marcar Todos Presentes</Button>
             </div>
             <main className="flex-grow overflow-y-auto px-4 space-y-2">
                 {course.students.map(student => (
-                    <div key={student.id} className="bg-brand-dark-2 p-3 rounded-lg flex items-center justify-between">
+                    <div key={student.id} className="bg-brand-dark-2 p-3 rounded-theme flex items-center justify-between">
                         <div onClick={() => onSelectStudent(student)} className="cursor-pointer">
                             <p className="font-bold">{student.name}</p>
-                            <p className="text-xs text-gray-400">Legajo: {student.studentId}</p>
+                            <p className="text-xs text-theming-text-secondary">Legajo: {student.studentId}</p>
                         </div>
                         <div className="flex space-x-1">
                            {attendanceButtons.map(btn => (
@@ -645,7 +719,7 @@ const CourseAttendanceScreen: React.FC<{ course: Course, onBack: () => void, onS
                 ))}
             </main>
             <div className="p-4 mt-auto bg-brand-dark-2">
-                <Button onClick={handleConfirm} className="bg-brand-green text-brand-dark hover:bg-brand-green-dark">Confirmar Asistencia</Button>
+                <Button onClick={handleConfirm} className="bg-brand-green text-theming-text-on-accent hover:bg-brand-green-dark">Confirmar Asistencia</Button>
             </div>
             <div className={`fixed bottom-24 left-1/2 -translate-x-1/2 transition-opacity duration-500 ${showSuccessMessage ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
                 <div className="bg-green-500 text-white px-6 py-3 rounded-full flex items-center space-x-2 shadow-lg">
@@ -692,7 +766,7 @@ const TeacherStudentProfileScreen: React.FC<{ student: Student, teacher: Teacher
                     <img src={student.avatar} alt="avatar" className="w-20 h-20 rounded-full" />
                     <div>
                         <h2 className="text-2xl font-bold">{student.name}</h2>
-                        <p className="text-gray-400">Legajo: {student.studentId}</p>
+                        <p className="text-theming-text-secondary">Legajo: {student.studentId}</p>
                     </div>
                 </div>
 
@@ -720,7 +794,7 @@ const TeacherStudentProfileScreen: React.FC<{ student: Student, teacher: Teacher
                              <li key={i} className="flex justify-between items-center bg-brand-dark-light p-3 rounded-md">
                                  <div>
                                     <p className="font-bold">{p.name} - {p.subjectName}</p>
-                                    <p className="text-xs text-gray-400">{new Date(p.date).toLocaleDateString('es-ES', { day: '2-digit', month: 'long' })}</p>
+                                    <p className="text-xs text-theming-text-secondary">{new Date(p.date).toLocaleDateString('es-ES', { day: '2-digit', month: 'long' })}</p>
                                  </div>
                                  <span className={`text-xl font-bold ${p.grade && p.grade >= 6 ? 'text-green-400' : 'text-red-400'}`}>{p.grade ?? '-'}</span>
                              </li>
@@ -736,7 +810,7 @@ const TeacherStudentProfileScreen: React.FC<{ student: Student, teacher: Teacher
                                   <span>{subject.name}</span>
                                   {subject.isRegisteredForFinal ? 
                                     <span className="flex items-center text-green-400"><CheckCircleIcon className="w-5 h-5 mr-1"/> Inscripto</span> :
-                                    <span className="flex items-center text-gray-400"><XCircleIcon className="w-5 h-5 mr-1"/> No Inscripto</span>
+                                    <span className="flex items-center text-theming-text-secondary"><XCircleIcon className="w-5 h-5 mr-1"/> No Inscripto</span>
                                   }
                               </li>
                          ))}
@@ -759,7 +833,7 @@ const TeacherStudentProfileScreen: React.FC<{ student: Student, teacher: Teacher
                                         <div className="flex justify-between items-start">
                                             <div>
                                                 <p className="font-bold text-sm">{att.subjectName}</p>
-                                                <p className="text-xs text-gray-400">Falta del: {new Date(att.date).toLocaleDateString('es-ES')}</p>
+                                                <p className="text-xs text-theming-text-secondary">Falta del: {new Date(att.date).toLocaleDateString('es-ES')}</p>
                                                 <p className="text-sm italic mt-1 text-gray-300">"{att.justificationNote}"</p>
                                             </div>
                                             {statusInfo.Icon && (
@@ -774,7 +848,7 @@ const TeacherStudentProfileScreen: React.FC<{ student: Student, teacher: Teacher
                             })}
                         </ul>
                     ) : (
-                        <p className="text-sm text-gray-400">El alumno no ha enviado justificaciones.</p>
+                        <p className="text-sm text-theming-text-secondary">El alumno no ha enviado justificaciones.</p>
                     )}
                 </Card>
                 
@@ -784,16 +858,16 @@ const TeacherStudentProfileScreen: React.FC<{ student: Student, teacher: Teacher
                         {conversation && conversation.messages.length > 0 ? (
                             conversation.messages.slice(-5).map(message => (
                                 <div key={message.id} className={`text-sm ${message.senderId === teacher.id ? 'text-right' : 'text-left'}`}>
-                                    <p className={`inline-block px-2 py-1 rounded-lg ${message.senderId === teacher.id ? 'bg-brand-green text-brand-dark' : 'bg-brand-dark'}`}>
+                                    <p className={`inline-block px-2 py-1 rounded-lg ${message.senderId === teacher.id ? 'bg-brand-green text-theming-text-on-accent' : 'bg-brand-dark'}`}>
                                         {message.text}
                                     </p>
                                 </div>
                             ))
                         ) : (
-                            <p className="text-sm text-gray-400 text-center py-4">No hay mensajes en esta conversación.</p>
+                            <p className="text-sm text-theming-text-secondary text-center py-4">No hay mensajes en esta conversación.</p>
                         )}
                     </div>
-                    <Button onClick={() => onNavigateToChat(student)} className="bg-brand-dark-light text-white text-sm w-full hover:bg-opacity-80">
+                    <Button onClick={() => onNavigateToChat(student)} className="bg-brand-dark-light text-theming-text-primary text-sm w-full hover:bg-opacity-80">
                         Ver Chat Completo
                     </Button>
                 </Card>
@@ -831,7 +905,7 @@ const TeacherJustificationsScreen: React.FC<{ teacher: Teacher, onBack: () => vo
                            <img src={att.student.avatar} alt={att.student.name} className="w-10 h-10 rounded-full"/>
                            <div>
                                 <p className="font-bold">{att.student.name}</p>
-                                <p className="text-sm text-gray-400">{att.subject.name}</p>
+                                <p className="text-sm text-theming-text-secondary">{att.subject.name}</p>
                                 <p className="text-xs text-gray-500">Fecha de falta: {new Date(att.date).toLocaleDateString('es-ES')}</p>
                            </div>
                         </div>
@@ -840,12 +914,12 @@ const TeacherJustificationsScreen: React.FC<{ teacher: Teacher, onBack: () => vo
                             <p className="text-sm text-gray-300 italic">"{att.justificationNote}"</p>
                         </div>
                         <div className="flex space-x-2 mt-4">
-                            <Button onClick={() => handleReview(att, true)} className="bg-brand-green text-brand-dark text-sm flex-1 hover:bg-brand-green-dark">Aprobar</Button>
+                            <Button onClick={() => handleReview(att, true)} className="bg-brand-green text-theming-text-on-accent text-sm flex-1 hover:bg-brand-green-dark">Aprobar</Button>
                             <Button onClick={() => handleReview(att, false)} className="bg-brand-red text-white text-sm flex-1 hover:bg-red-600">Rechazar</Button>
                         </div>
                     </Card>
                 )) : (
-                    <div className="text-center text-gray-400 pt-16">
+                    <div className="text-center text-theming-text-secondary pt-16">
                         <DocumentCheckIcon className="w-16 h-16 mx-auto mb-4 text-gray-500" />
                         <h3 className="text-lg font-bold">Todo al día</h3>
                         <p>No hay justificaciones pendientes de revisión.</p>
@@ -884,14 +958,14 @@ const ConversationsScreen: React.FC<{ user: User, onSelectChat: (partner: User) 
                             <div className="flex-grow overflow-hidden">
                                 <div className="flex justify-between items-baseline">
                                     <h3 className="font-bold truncate">{partner.name}</h3>
-                                    <p className="text-xs text-gray-400 flex-shrink-0">{new Date(lastMessage.timestamp).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}</p>
+                                    <p className="text-xs text-theming-text-secondary flex-shrink-0">{new Date(lastMessage.timestamp).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}</p>
                                 </div>
                                 <p className="text-sm text-gray-300 truncate">{lastMessage.text}</p>
                             </div>
                         </Card>
                     )
                 ))}
-                {userConversations.length === 0 && <p className="text-gray-400 text-center pt-8">No tienes mensajes.</p>}
+                {userConversations.length === 0 && <p className="text-theming-text-secondary text-center pt-8">No tienes mensajes.</p>}
             </main>
         </>
     );
@@ -923,9 +997,9 @@ const ChatScreen: React.FC<{ user: User, partner: User, onBack: () => void }> = 
             <main className="flex-grow overflow-y-auto p-4 space-y-4">
                 {conversation.messages.map(message => (
                     <div key={message.id} className={`flex ${message.senderId === user.id ? 'justify-end' : 'justify-start'}`}>
-                        <div className={`max-w-xs lg:max-w-md px-4 py-2 rounded-2xl ${message.senderId === user.id ? 'bg-brand-green text-brand-dark' : 'bg-brand-dark-2'}`}>
+                        <div className={`max-w-xs lg:max-w-md px-4 py-2 rounded-2xl ${message.senderId === user.id ? 'bg-brand-green text-theming-text-on-accent' : 'bg-brand-dark-2'}`}>
                             <p>{message.text}</p>
-                            <p className={`text-xs mt-1 ${message.senderId === user.id ? 'text-gray-800' : 'text-gray-400'} text-right`}>
+                            <p className={`text-xs mt-1 ${message.senderId === user.id ? 'text-gray-800' : 'text-theming-text-secondary'} text-right`}>
                                 {new Date(message.timestamp).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}
                             </p>
                         </div>
@@ -972,7 +1046,7 @@ const AddEventModal: React.FC<{
             <div className="bg-brand-dark-2 rounded-lg p-6 w-11/12 max-w-sm">
                 <div className="flex justify-between items-center mb-4">
                     <h3 className="text-lg font-bold">Agregar Evento</h3>
-                    <button onClick={onClose} className="text-gray-400 hover:text-white">
+                    <button onClick={onClose} className="text-theming-text-secondary hover:text-theming-text-primary">
                         <XCircleIcon className="w-6 h-6" />
                     </button>
                 </div>
@@ -1000,8 +1074,8 @@ const AddEventModal: React.FC<{
                     </div>
                 </div>
                 <div className="flex justify-end space-x-2 mt-6">
-                    <Button onClick={onClose} className="bg-brand-dark-light text-white text-sm w-auto px-4 py-2">Cancelar</Button>
-                    <Button onClick={handleSave} className="bg-brand-green text-brand-dark text-sm w-auto px-4 py-2">Guardar</Button>
+                    <Button onClick={onClose} className="bg-brand-dark-light text-theming-text-primary text-sm w-auto px-4 py-2">Cancelar</Button>
+                    <Button onClick={handleSave} className="bg-brand-green text-theming-text-on-accent text-sm w-auto px-4 py-2">Guardar</Button>
                 </div>
             </div>
         </div>
@@ -1076,7 +1150,7 @@ const CalendarScreen: React.FC<{ user: User }> = ({ user }) => {
                         <h3 className="font-bold text-lg">{currentDate.toLocaleString('es-ES', { month: 'long', year: 'numeric' }).replace(/^\w/, c => c.toUpperCase())}</h3>
                         <button onClick={() => changeMonth(1)}><ChevronRightIcon className="w-6 h-6" /></button>
                     </div>
-                    <div className="grid grid-cols-7 text-center text-xs text-gray-400 mb-2">
+                    <div className="grid grid-cols-7 text-center text-xs text-theming-text-secondary mb-2">
                         {['DOM', 'LUN', 'MAR', 'MIÉ', 'JUE', 'VIE', 'SÁB'].map(day => <div key={day}>{day}</div>)}
                     </div>
                     <div className="grid grid-cols-7 text-center">
@@ -1092,7 +1166,7 @@ const CalendarScreen: React.FC<{ user: User }> = ({ user }) => {
                                     <button
                                         onClick={() => setSelectedDate(date)}
                                         className={`w-8 h-8 rounded-full flex items-center justify-center mx-auto
-                                            ${isToday ? 'bg-brand-green text-brand-dark font-bold' : ''}
+                                            ${isToday ? 'bg-brand-green text-theming-text-on-accent font-bold' : ''}
                                             ${isSelected ? 'ring-2 ring-brand-green' : ''}
                                             ${!isToday && !isSelected ? 'hover:bg-brand-dark-light' : ''}
                                         `}
@@ -1115,14 +1189,14 @@ const CalendarScreen: React.FC<{ user: User }> = ({ user }) => {
                              </li>
                         ))}
                         {(selectedDate ? eventsOnSelectedDate : upcomingEvents).length === 0 && (
-                            <p className="text-sm text-gray-400">No hay eventos programados.</p>
+                            <p className="text-sm text-theming-text-secondary">No hay eventos programados.</p>
                         )}
                     </ul>
                 </Card>
             </main>
             <button
                 onClick={() => setIsAddModalOpen(true)}
-                className="absolute bottom-6 right-6 bg-brand-green text-brand-dark rounded-full p-4 shadow-lg hover:bg-brand-green-dark transition-colors z-20"
+                className="absolute bottom-6 right-6 bg-brand-green text-theming-text-on-accent rounded-full p-4 shadow-lg hover:bg-brand-green-dark transition-colors z-20"
                 aria-label="Agregar evento"
             >
                 <PlusIcon className="w-6 h-6" />
@@ -1143,7 +1217,7 @@ const AvatarSelectionModal: React.FC<{ onSelect: (avatarUrl: string) => void, on
         <div className="bg-brand-dark-2 rounded-lg p-6 w-11/12 max-w-sm">
             <div className="flex justify-between items-center mb-4">
                 <h3 className="text-lg font-bold">Selecciona un nuevo avatar</h3>
-                <button onClick={onClose} className="text-gray-400 hover:text-white">
+                <button onClick={onClose} className="text-theming-text-secondary hover:text-theming-text-primary">
                     <XCircleIcon className="w-6 h-6" />
                 </button>
             </div>
@@ -1169,6 +1243,7 @@ const ProfileScreen: React.FC<{ user: User, onLogout: () => void, onNavigate: (s
     
     const profileOptions = [
         { id: 'notifications', label: 'Notificaciones', icon: BellIcon, screen: 'notificationsSettings' as ScreenName },
+        { id: 'appearance', label: 'Apariencia', icon: PaintBrushIcon, screen: 'appearanceSettings' as ScreenName },
         { id: 'privacy', label: 'Privacidad', icon: ShieldCheckIcon, screen: 'privacySettings' as ScreenName },
         { id: 'language', label: 'Idioma', icon: GlobeAltIcon, screen: 'languageSettings' as ScreenName },
     ];
@@ -1185,15 +1260,15 @@ const ProfileScreen: React.FC<{ user: User, onLogout: () => void, onNavigate: (s
                         </div>
                     </button>
                     <h2 className="text-2xl font-bold">{user.name}</h2>
-                    <p className="text-gray-400">{user.email}</p>
+                    <p className="text-theming-text-secondary">{user.email}</p>
                 </div>
                 
                 <Card>
                     <h3 className="font-bold text-lg mb-2">Configuración</h3>
                     <ul className="space-y-1">
                         {profileOptions.map(option => (
-                           <li key={option.id} onClick={() => onNavigate(option.screen)} className="flex items-center p-3 rounded-lg hover:bg-brand-dark-light cursor-pointer">
-                                <option.icon className="w-6 h-6 mr-4 text-gray-400" />
+                           <li key={option.id} onClick={() => onNavigate(option.screen)} className="flex items-center p-3 rounded-theme hover:bg-brand-dark-light cursor-pointer">
+                                <option.icon className="w-6 h-6 mr-4 text-theming-text-secondary" />
                                 <span>{option.label}</span>
                                 <ChevronRightIcon className="w-5 h-5 ml-auto text-gray-500" />
                            </li>
@@ -1202,7 +1277,7 @@ const ProfileScreen: React.FC<{ user: User, onLogout: () => void, onNavigate: (s
                 </Card>
 
                 <div className="pt-4">
-                     <Button onClick={onLogout} className="bg-brand-dark-light text-brand-red flex items-center justify-center space-x-2 hover:bg-brand-dark-light/80">
+                     <Button onClick={onLogout} className="bg-brand-dark-light text-brand-red flex items-center justify-center space-x-2 hover:bg-opacity-80">
                          <LogoutIcon className="w-5 h-5" />
                          <span>Cerrar Sesión</span>
                      </Button>
@@ -1235,9 +1310,9 @@ const NotificationsSettingsScreen: React.FC<{onBack: () => void}> = ({onBack}) =
             <main className="p-4 flex-grow overflow-y-auto">
                 <Card>
                     <Toggle label="Recordatorios de parciales" enabled={settings.reminders} onToggle={() => toggleSetting('reminders')} />
-                    <hr className="border-brand-dark-light"/>
+                    <hr className="border-theming-border"/>
                     <Toggle label="Cambios de aula" enabled={settings.classroomChanges} onToggle={() => toggleSetting('classroomChanges')} />
-                    <hr className="border-brand-dark-light"/>
+                    <hr className="border-theming-border"/>
                     <Toggle label="Mensajes nuevos" enabled={settings.messages} onToggle={() => toggleSetting('messages')} />
                 </Card>
             </main>
@@ -1257,11 +1332,11 @@ const PrivacySettingsScreen: React.FC<{onBack: () => void}> = ({onBack}) => {
             <Header title="Privacidad" onBack={onBack}/>
             <main className="p-4 flex-grow overflow-y-auto">
                  <Card>
-                    <div onClick={handleChangePassword} className="flex items-center p-3 rounded-lg hover:bg-brand-dark-light cursor-pointer">
+                    <div onClick={handleChangePassword} className="flex items-center p-3 rounded-theme hover:bg-brand-dark-light cursor-pointer">
                         <span>Cambiar contraseña</span>
                         <ChevronRightIcon className="w-5 h-5 ml-auto text-gray-500" />
                     </div>
-                     <hr className="border-brand-dark-light"/>
+                     <hr className="border-theming-border"/>
                      <Toggle label="Mantener perfil público" enabled={isProfilePublic} onToggle={() => setIsProfilePublic(prev => !prev)} />
                 </Card>
             </main>
@@ -1283,7 +1358,7 @@ const LanguageSettingsScreen: React.FC<{onBack: () => void}> = ({onBack}) => {
             <main className="p-4 flex-grow overflow-y-auto">
                 <Card>
                     {languages.map(lang => (
-                        <div key={lang.id} onClick={() => setSelectedLanguage(lang.id)} className="flex items-center p-3 rounded-lg hover:bg-brand-dark-light cursor-pointer">
+                        <div key={lang.id} onClick={() => setSelectedLanguage(lang.id)} className="flex items-center p-3 rounded-theme hover:bg-brand-dark-light cursor-pointer">
                             <span>{lang.label}</span>
                             {selectedLanguage === lang.id && <CheckCircleIcon className="w-6 h-6 ml-auto text-brand-green" />}
                         </div>
@@ -1293,6 +1368,59 @@ const LanguageSettingsScreen: React.FC<{onBack: () => void}> = ({onBack}) => {
         </div>
     );
 };
+
+const AppearanceSettingsScreen: React.FC<{onBack: () => void}> = ({onBack}) => {
+    const { theme, setTheme, themes, borderStyle, setBorderStyle, borderStyles } = useAppearance();
+
+    return (
+        <div className="h-full flex flex-col">
+            <Header title="Modelos de Apariencia" onBack={onBack}/>
+            <main className="p-4 flex-grow overflow-y-auto space-y-8">
+                 <div>
+                    <h2 className="text-xl font-bold text-theming-text-primary mb-1">Modelos de Apariencia</h2>
+                    <p className="text-theming-text-secondary">Personaliza la apariencia de la aplicación.</p>
+                </div>
+
+                <section>
+                    <h3 className="text-lg font-bold flex items-center mb-4">
+                        <SwatchIcon className="w-6 h-6 mr-3 text-theming-text-secondary" />
+                        Temas de Color
+                    </h3>
+                    <div className="grid grid-cols-2 gap-4">
+                        {Object.values(themes).map(t => (
+                            <div key={t.id} onClick={() => setTheme(t.id)}
+                                className={`p-3 rounded-theme cursor-pointer border-2 transition-all ${theme === t.id ? 'border-brand-green' : 'border-brand-dark-2'}`}>
+                                <h4 className="font-bold mb-3 flex items-center">
+                                    {t.name}
+                                </h4>
+                                <div className="flex space-x-2">
+                                    <div className="w-6 h-6 rounded-full border border-black/10" style={{backgroundColor: t.colors.c1}}></div>
+                                    <div className="w-6 h-6 rounded-full border border-black/10" style={{backgroundColor: t.colors.c2}}></div>
+                                    <div className="w-6 h-6 rounded-full border border-black/10" style={{backgroundColor: t.colors.c3}}></div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </section>
+
+                <section>
+                    <h3 className="text-lg font-bold flex items-center mb-4">
+                        <RectangleStackIcon className="w-6 h-6 mr-3 text-theming-text-secondary" />
+                        Estilos de Borde
+                    </h3>
+                     <div className="bg-brand-dark-2 rounded-theme p-2 space-y-1">
+                        {Object.values(borderStyles).map(bs => (
+                            <button key={bs.id} onClick={() => setBorderStyle(bs.id)}
+                                className={`w-full text-left p-3 rounded-md transition-colors ${borderStyle === bs.id ? 'bg-brand-green text-theming-text-on-accent' : 'hover:bg-brand-dark-light'}`}>
+                                {bs.name}
+                            </button>
+                        ))}
+                    </div>
+                </section>
+            </main>
+        </div>
+    );
+}
 
 // --- MAIN APP COMPONENT ---
 
@@ -1405,6 +1533,7 @@ const AppContent: React.FC = () => {
                 case 'notificationsSettings': return <NotificationsSettingsScreen onBack={() => setActiveScreen('studentProfile')} />;
                 case 'privacySettings': return <PrivacySettingsScreen onBack={() => setActiveScreen('studentProfile')} />;
                 case 'languageSettings': return <LanguageSettingsScreen onBack={() => setActiveScreen('studentProfile')} />;
+                case 'appearanceSettings': return <AppearanceSettingsScreen onBack={() => setActiveScreen('studentProfile')} />;
                 default: return <StudentDashboard student={student} onNavigate={setActiveScreen} />;
             }
         }
@@ -1434,6 +1563,7 @@ const AppContent: React.FC = () => {
                 case 'notificationsSettings': return <NotificationsSettingsScreen onBack={() => setActiveScreen('teacherProfile')} />;
                 case 'privacySettings': return <PrivacySettingsScreen onBack={() => setActiveScreen('teacherProfile')} />;
                 case 'languageSettings': return <LanguageSettingsScreen onBack={() => setActiveScreen('teacherProfile')} />;
+                case 'appearanceSettings': return <AppearanceSettingsScreen onBack={() => setActiveScreen('teacherProfile')} />;
                 default: return <TeacherDashboard teacher={teacher} onTakeAttendance={(c) => { setSelectedCourseId(c.id); setActiveScreen('courseAttendance'); }} onNavigate={setActiveScreen} />;
             }
         }
@@ -1461,9 +1591,11 @@ const AppContent: React.FC = () => {
 
 const App: React.FC = () => {
     return (
-        <DataProvider>
-            <AppContent />
-        </DataProvider>
+        <AppearanceProvider>
+            <DataProvider>
+                <AppContent />
+            </DataProvider>
+        </AppearanceProvider>
     );
 };
 
