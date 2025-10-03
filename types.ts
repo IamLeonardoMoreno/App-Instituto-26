@@ -90,9 +90,19 @@ export interface NavItem {
     icon: React.FC<{className?: string}>;
 }
 
+export interface Announcement {
+    id: string;
+    text: string;
+    targetCareer: string;
+    targetYear: string;
+}
+
 export interface DataContextType {
     users: (Student | Teacher)[];
     conversations: Conversation[];
+    announcements: Announcement[];
+    addAnnouncement: (announcement: Omit<Announcement, 'id'>) => void;
+    deleteAnnouncement: (announcementId: string) => void;
     updateStudentData: (studentId: number, courseId: string, date: string, newStatus: AttendanceStatus) => void;
     addMessage: (senderId: number, receiverId: number, text: string) => void;
     findUserById: (id: number) => Student | Teacher | undefined;

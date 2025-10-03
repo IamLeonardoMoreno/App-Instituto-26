@@ -1,13 +1,14 @@
 
 import React, { useState, createContext, useContext, ReactNode, useMemo, useRef, useEffect } from 'react';
 // FIX: Renamed `Partial` to `PartialGrade` to match the change in `types.ts` and resolve the name conflict with TypeScript's built-in `Partial` utility type.
-import { User, Student, Teacher, NavItem, Course, AttendanceStatus, Subject, PartialGrade, Conversation, Message, UserRole, AttendanceRecord, CustomEvent, DataContextType } from './types';
-import { MOCK_STUDENT, MOCK_TEACHER, ALL_USERS, ATTENDANCE_STATUS, MOCK_COURSE_MATH_1A, MOCK_CONVERSATIONS, SAMPLE_AVATARS } from './constants';
+import { User, Student, Teacher, NavItem, Course, AttendanceStatus, Subject, PartialGrade, Conversation, Message, UserRole, AttendanceRecord, CustomEvent, DataContextType, Announcement } from './types';
+import { MOCK_STUDENT, MOCK_TEACHER, ALL_USERS, ATTENDANCE_STATUS, MOCK_COURSE_MATH_1A, MOCK_CONVERSATIONS, SAMPLE_AVATARS, MOCK_ANNOUNCEMENTS } from './constants';
 import {
     HomeIcon, CalendarIcon, BookOpenIcon, UserCircleIcon, CogIcon, BellIcon, ArrowLeftIcon,
     CheckCircleIcon, XCircleIcon, JustifyIcon, MinusCircleIcon, LateIcon, ChevronRightIcon,
     LogoutIcon, DocumentTextIcon, ShieldCheckIcon, GlobeAltIcon, ChevronLeftIcon, ChatBubbleLeftRightIcon,
-    PaperAirplaneIcon, DocumentCheckIcon, PlusIcon, PaintBrushIcon, SwatchIcon, RectangleStackIcon
+    PaperAirplaneIcon, DocumentCheckIcon, PlusIcon, PaintBrushIcon, SwatchIcon, RectangleStackIcon,
+    MegaphoneIcon, TrashIcon
 } from './components/Icons';
 
 // --- APPEARANCE PROVIDER CONTEXT ---
@@ -99,6 +100,19 @@ const useData = () => {
 const DataProvider = ({ children }: { children: ReactNode }) => {
     const [users, setUsers] = useState<(Student | Teacher)[]>(ALL_USERS);
     const [conversations, setConversations] = useState<Conversation[]>(MOCK_CONVERSATIONS);
+    const [announcements, setAnnouncements] = useState<Announcement[]>(MOCK_ANNOUNCEMENTS);
+
+    const addAnnouncement = (announcementData: Omit<Announcement, 'id'>) => {
+        setAnnouncements(prev => [
+            { ...announcementData, id: `anno-${Date.now()}` },
+            ...prev
+        ]);
+    };
+
+    const deleteAnnouncement = (announcementId: string) => {
+        setAnnouncements(prev => prev.filter(a => a.id !== announcementId));
+    };
+
 
     const findUserById = (id: number) => users.find(u => u.id === id);
 
@@ -237,6 +251,9 @@ const DataProvider = ({ children }: { children: ReactNode }) => {
     const value: DataContextType = {
         users,
         conversations,
+        announcements,
+        addAnnouncement,
+        deleteAnnouncement,
         updateStudentData,
         addMessage,
         findUserById,
@@ -297,7 +314,7 @@ const Toggle: React.FC<{label: string, enabled: boolean, onToggle: () => void}> 
 );
 
 // --- NAVIGATION ---
-type ScreenName = 'login' | 'studentDashboard' | 'teacherDashboard' | 'studentSubjects' | 'studentSubjectDetail' | 'studentCalendar' | 'studentProfile' | 'teacherCourses' | 'courseAttendance' | 'teacherStudentProfile' | 'teacherCalendar' | 'teacherProfile' | 'notificationsSettings' | 'privacySettings' | 'languageSettings' | 'messages' | 'chat' | 'teacherJustifications' | 'appearanceSettings';
+type ScreenName = 'login' | 'studentDashboard' | 'teacherDashboard' | 'studentSubjects' | 'studentSubjectDetail' | 'studentCalendar' | 'studentProfile' | 'teacherCourses' | 'courseAttendance' | 'teacherStudentProfile' | 'teacherCalendar' | 'teacherProfile' | 'notificationsSettings' | 'privacySettings' | 'languageSettings' | 'messages' | 'chat' | 'teacherJustifications' | 'appearanceSettings' | 'teacherAnnouncements';
 
 const BottomNavBar: React.FC<{ active: string; onNavigate: (item: NavItem) => void; navItems: NavItem[] }> = ({ active, onNavigate, navItems }) => (
     <nav className="bg-brand-dark-2 mt-auto">
@@ -531,6 +548,95 @@ const StudentSubjectDetailScreen: React.FC<{ student: Student, subjectId: string
 };
 
 // --- TEACHER SCREENS ---
+
+const TeacherAnnouncementsScreen: React.FC<{}> = () => {
+    const { announcements, addAnnouncement, deleteAnnouncement } = useData();
+    const [text, setText] = useState('');
+    const [targetCareer, setTargetCareer] = useState('all');
+    const [targetYear, setTargetYear] = useState('all');
+
+    const handleSubmit = () => {
+        if (text.trim()) {
+            addAnnouncement({ text, targetCareer, targetYear });
+            setText('');
+            setTargetCareer('all');
+            setTargetYear('all');
+        }
+    };
+
+    const getTargetAudience = (announcement: Announcement) => {
+        if (announcement.targetCareer === 'all' && announcement.targetYear === 'all') {
+            return 'General';
+        }
+        // Add more logic here if needed for specific targets
+        return `Para ${announcement.targetCareer} - ${announcement.targetYear}`;
+    }
+
+    return (
+        <>
+            <Header title="Asistencia Terciario" />
+            <main className="p-4 flex-grow overflow-y-auto space-y-6">
+                <Card>
+                    <h2 className="text-xl font-bold mb-3 flex items-center">
+                        <MegaphoneIcon className="w-6 h-6 mr-2" />
+                        Crear Anuncio
+                    </h2>
+                    <div className="space-y-4">
+                        <textarea
+                            value={text}
+                            onChange={(e) => setText(e.target.value)}
+                            placeholder="Escribe tu anuncio aquí..."
+                            className="w-full p-3 bg-brand-dark-light border border-theming-border rounded-theme focus:outline-none focus:ring-2 focus:ring-brand-green h-28"
+                            aria-label="Contenido del anuncio"
+                        />
+                        <select
+                            value={targetCareer}
+                            onChange={(e) => setTargetCareer(e.target.value)}
+                            className="w-full p-3 bg-brand-dark-light border border-theming-border rounded-theme focus:outline-none focus:ring-2 focus:ring-brand-green"
+                             aria-label="Seleccionar carrera"
+                        >
+                            <option value="all">Para: Todas las carreras</option>
+                            <option value="informatica">Informática</option>
+                            <option value="turismo">Turismo</option>
+                        </select>
+                        <select
+                            value={targetYear}
+                            onChange={(e) => setTargetYear(e.target.value)}
+                            className="w-full p-3 bg-brand-dark-light border border-theming-border rounded-theme focus:outline-none focus:ring-2 focus:ring-brand-green"
+                            aria-label="Seleccionar año"
+                        >
+                            <option value="all">Para: Todos los años</option>
+                            <option value="1">1er Año</option>
+                            <option value="2">2do Año</option>
+                            <option value="3">3er Año</option>
+                        </select>
+                        <Button onClick={handleSubmit} className="bg-brand-green text-theming-text-on-accent hover:bg-brand-green-dark">
+                            Publicar Anuncio
+                        </Button>
+                    </div>
+                </Card>
+
+                <div>
+                    <h2 className="text-xl font-bold mb-3">Anuncios Activos</h2>
+                    <div className="space-y-3">
+                        {announcements.map(announcement => (
+                            <Card key={announcement.id} className="flex justify-between items-start">
+                                <div className="pr-4">
+                                    <p>{announcement.text}</p>
+                                    <p className="text-xs text-theming-text-secondary mt-1">{getTargetAudience(announcement)}</p>
+                                </div>
+                                <button onClick={() => deleteAnnouncement(announcement.id)} className="text-brand-red hover:text-red-400 p-1" aria-label={`Eliminar anuncio: ${announcement.text}`}>
+                                    <TrashIcon className="w-5 h-5" />
+                                </button>
+                            </Card>
+                        ))}
+                    </div>
+                </div>
+            </main>
+        </>
+    );
+};
+
 
 const TeacherDashboard: React.FC<{ teacher: Teacher, onTakeAttendance: (course: Course) => void, onNavigate: (screen: ScreenName) => void }> = ({ teacher, onTakeAttendance, onNavigate }) => {
     const { users } = useData();
@@ -1480,6 +1586,7 @@ const AppContent: React.FC = () => {
             if (item.id === 'materias') setActiveScreen('teacherCourses');
             if (item.id === 'calendario') setActiveScreen('teacherCalendar');
             if (item.id === 'mensajes') setActiveScreen('messages');
+            if (item.id === 'anuncios') setActiveScreen('teacherAnnouncements');
             if (item.id === 'perfil') setActiveScreen('teacherProfile');
         }
     };
@@ -1493,11 +1600,12 @@ const AppContent: React.FC = () => {
     ];
     
     const teacherNavItems: NavItem[] = [
-        { id: 'home', label: 'Inicio', icon: HomeIcon },
+        { id: 'home', label: 'Resumen', icon: HomeIcon },
+        { id: 'materias', label: 'Asistencia', icon: DocumentCheckIcon },
         { id: 'calendario', label: 'Calendario', icon: CalendarIcon },
-        { id: 'materias', label: 'Materias', icon: BookOpenIcon },
-        { id: 'mensajes', label: 'Mensajes', icon: ChatBubbleLeftRightIcon },
-        { id: 'perfil', label: 'Perfil', icon: UserCircleIcon },
+        { id: 'anuncios', label: 'Anuncios', icon: MegaphoneIcon },
+        { id: 'mensajes', label: 'Foros', icon: ChatBubbleLeftRightIcon },
+        { id: 'perfil', label: 'Alumnos', icon: UserCircleIcon },
     ];
     
     const navIdMap: Record<string, string> = {
@@ -1505,6 +1613,7 @@ const AppContent: React.FC = () => {
         'studentSubjects': 'materias', 'teacherCourses': 'materias',
         'studentCalendar': 'calendario', 'teacherCalendar': 'calendario',
         'messages': 'mensajes',
+        'teacherAnnouncements': 'anuncios',
         'studentProfile': 'perfil', 'teacherProfile': 'perfil',
     };
     
@@ -1557,6 +1666,7 @@ const AppContent: React.FC = () => {
                 />;
                 case 'teacherCalendar': return <CalendarScreen user={teacher} />;
                 case 'teacherJustifications': return <TeacherJustificationsScreen teacher={teacher} onBack={() => setActiveScreen('teacherDashboard')} />;
+                case 'teacherAnnouncements': return <TeacherAnnouncementsScreen />;
                 case 'messages': return <ConversationsScreen user={teacher} onSelectChat={handleSelectChat} />;
                 case 'chat': return selectedChatPartner && <ChatScreen user={teacher} partner={selectedChatPartner} onBack={() => setActiveScreen(chatReturnScreen)} />;
                 case 'teacherProfile': return <ProfileScreen user={teacher} onLogout={handleLogout} onNavigate={setActiveScreen} />;
@@ -1570,7 +1680,7 @@ const AppContent: React.FC = () => {
         return null;
     };
     
-    const showNavBar = currentUser && ['studentDashboard', 'teacherDashboard', 'studentSubjects', 'teacherCourses', 'studentCalendar', 'teacherCalendar', 'messages', 'studentProfile', 'teacherProfile'].includes(activeScreen);
+    const showNavBar = currentUser && ['studentDashboard', 'teacherDashboard', 'studentSubjects', 'teacherCourses', 'studentCalendar', 'teacherCalendar', 'messages', 'studentProfile', 'teacherProfile', 'teacherAnnouncements'].includes(activeScreen);
 
     return (
         <Screen>

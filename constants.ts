@@ -1,4 +1,4 @@
-import { Student, Teacher, Course, AttendanceStatus, Subject, Conversation, Message } from "./types";
+import { Student, Teacher, Course, AttendanceStatus, Subject, Conversation, Message, Announcement } from "./types";
 
 export const ATTENDANCE_STATUS = {
     [AttendanceStatus.Present]: { label: 'Presente', color: 'text-green-400', bg: 'bg-green-800', iconName: 'CheckCircleIcon' },
@@ -155,6 +155,15 @@ export const MOCK_CONVERSATIONS: Conversation[] = [
             { id: 'msg4', senderId: 1, text: 'Hola, quería saber la nota del último parcial.', timestamp: '2024-11-20T09:00:00Z' },
         ]
     }
+];
+
+export const MOCK_ANNOUNCEMENTS: Announcement[] = [
+    {
+        id: 'anno1',
+        text: 'Semana de finales: ¡Mucha suerte a todos los estudiantes!',
+        targetCareer: 'all',
+        targetYear: 'all',
+    },
 ];
 
 export const SAMPLE_AVATARS = [
